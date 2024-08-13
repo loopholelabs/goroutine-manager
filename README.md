@@ -85,7 +85,7 @@ cfg.Locker_handler = func() {
 `Locker_handler` doesn’t return any errors, so handling an error from calling `to.SendEvent` is difficult aside from logging it. Using `CreateBackgroundPanicCollector` allows the error to be collected into `errs` and the `GoroutineCtx` to be canceled when appropriate. This can be used to shut down whatever is calling `Locker_handler` in response to an error in the hook. It is also very useful in defer functions. Often, defer functions are used like this:
 
 ```go
-forwardedPorts.Close()
+defer forwardedPorts.Close()
 ```
 
 However, this is problematic if `Close` returns an error. By deferring a panic collector, it becomes possible to collect the errors that occur during cleanup/stack unwinding into `errs` and react to them accordingly:
