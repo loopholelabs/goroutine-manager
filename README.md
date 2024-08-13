@@ -49,14 +49,14 @@ goroutineManager := utils.NewGoroutineManager(
 	&errs,
 	utils.GoroutineManagerHooks{},
 )
-defer goroutineManager.WaitForForegroundGoroutines()
+defer goroutineManager.Wait()
 defer goroutineManager.StopAllGoroutines()
 defer goroutineManager.CreateBackgroundPanicCollector()()
 ```
 
 This setup ensures that any panics occurring after the last line will be collected into the `errs` variable. Any goroutines started after it will be stopped and waited for until they finish executing if a panic occurs or the stack unwinds, e.g., after a `return`.
 
-To start a goroutine, you can use `StartForegroundGoroutine` or `StartBackgroundGoroutine`. Foreground goroutines are "tracked" and can be waited for to finish executing with `WaitForForegroundGoroutines`, while background goroutines are for "fire and forget" scenarios. Any context-aware libraries used in a goroutine should be passed the context returned by `GetGoroutineCtx` and should block until they have finished executing. This ensures that during a graceful shutdown, these dependencies will also be shut down, and in the case of foreground goroutines, will be waited for. Note that panics in both foreground and background goroutines lead to the `GoroutineCtx` being canceled, and the errors will be collected into `errs`.
+To start a goroutine, you can use `StartForegroundGoroutine` or `StartBackgroundGoroutine`. Foreground goroutines are "tracked" and can be waited for to finish executing with `Wait`, while background goroutines are for "fire and forget" scenarios. Any context-aware libraries used in a goroutine should be passed the context returned by `Context` (which is also provided as an argument to `StartForegroundGoroutine` and `StartBackgroundGoroutine`) and should block until they have finished executing. This ensures that during a graceful shutdown, these dependencies will also be shut down, and in the case of foreground goroutines, will be waited for. Note that panics in both foreground and background goroutines lead to `Context` being canceled, and the errors will be collected into `errs`.
 
 ### 2. Handling Externally Started Goroutines with the Goroutine Manager
 
@@ -102,7 +102,7 @@ defer func() {
 
 ### 4. Gracefully Stopping Goroutines and Waiting for Them to Finish Executing
 
-To gracefully stop a goroutine, simply call `StopAllGoroutines()`, or simply `return` if you're using the setup described above. `StopAllGoroutines` cancels the `GoroutineCtx` with a special cause that is unique to each Goroutine Manager, which can be retrieved by calling `GetErrGoroutineStopped()`. `StartForegroundGoroutine`, `CreateBackgroundPanicCollector`, etc., handle any `context.Context` with this cause as a graceful shutdown, which means that `errs` will be `nil` on a graceful shutdown instead of containing `context.Canceled`. This allows you to distinguish between "intentional" context cancellations, e.g., one caused by sending an interrupt signal to a program, and "unintentional" context cancellations, e.g., one caused by a request timing out.
+To gracefully stop a goroutine, simply call `StopAllGoroutines()`, or simply `return` if you're using the setup described above. `StopAllGoroutines` cancels `Context` with a special cause that is unique to each Goroutine Manager, which can be retrieved by calling `GetErrGoroutineStopped()`. `StartForegroundGoroutine`, `CreateBackgroundPanicCollector`, etc., handle any `context.Context` with this cause as a graceful shutdown, which means that `errs` will be `nil` on a graceful shutdown instead of containing `context.Canceled`. This allows you to distinguish between "intentional" context cancellations, e.g., one caused by sending an interrupt signal to a program, and "unintentional" context cancellations, e.g., one caused by a request timing out.
 
 ### 5. Handling Dependencies Between Goroutines
 
