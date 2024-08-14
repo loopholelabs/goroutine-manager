@@ -44,10 +44,10 @@ defer func() { // Just an example; you probably want to handle your errors diffe
 	}
 }()
 
-goroutineManager := utils.NewGoroutineManager(
+goroutineManager := manager.NewGoroutineManager(
 	ctx,
 	&errs,
-	utils.GoroutineManagerHooks{},
+	manager.GoroutineManagerHooks{},
 )
 defer goroutineManager.Wait()
 defer goroutineManager.StopAllGoroutines()
@@ -134,6 +134,7 @@ To make getting started with Goroutine Manager easier, take a look at the follow
 - [Handling Errors in `defer`ed Functions](https://github.com/loopholelabs/drafter/blob/use-go-resource-manager/cmd/drafter-forwarder/main.go#L106-L112)
 - [Gracefully Stopping Goroutines and Waiting for Them to Finish Executing](https://github.com/loopholelabs/drafter/blob/use-go-resource-manager/pkg/roles/mounter.go#L132-L139)
 - [Handling Dependencies Between Goroutines](https://github.com/loopholelabs/drafter/blob/use-go-resource-manager/pkg/roles/runner.go#L142-L174)
+- [Test cases](./pkg/manager/goroutine_test.go)
 
 ## Contributing
 
